@@ -4,12 +4,16 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "npm run build --prefix frontend",
-    "start": "npm run start --prefix backend"
+    "start": "npm run start --prefix backend",
+    "test": "npm run test --prefix backend"
   },
   "dependencies": {
+    "@google/genai": "^2.19.0",
     "@tailwindcss/vite": "^4.1.13",
     "@vitejs/plugin-react": "^5.0.2",
     "express": "^5.1.0",
+    "multer": "^2.3.0",
+    "pdf-parse": "^2.4.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tailwindcss": "^4.1.13",

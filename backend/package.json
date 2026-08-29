@@ -4,9 +4,13 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "test": "node --test src/modules/scrutiny/pilRules.test.js"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "@google/genai": "^2.19.0",
+    "express": "^5.1.0",
+    "multer": "^2.3.0",
+    "pdf-parse": "^2.4.5"
   }
 }
