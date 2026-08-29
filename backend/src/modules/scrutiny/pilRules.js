@@ -12,6 +12,7 @@ function normalizeReference(value) {
 
 function findMissingAnnexures(references, documents) {
   const documentEvidence = documents
+    .slice(1)
     .map((document) => `${document.filename} ${document.text.slice(0, 4000)}`)
     .join(" ")
     .toLowerCase();
@@ -23,6 +24,18 @@ function findMissingAnnexures(references, documents) {
 
     return !candidates.some((candidate) => normalizeReference(documentEvidence).includes(candidate));
   });
+}
+
+function describesMissingAnnexure(inconsistency, missingAnnexures) {
+  const inconsistencyText = normalizeReference(`${inconsistency.type} ${inconsistency.description}`);
+
+  return inconsistencyText.includes("annexure")
+    && missingAnnexures.some((reference) => {
+      const normalized = normalizeReference(reference);
+      const identifier = normalized.replace(/^annexure/, "").replace(/^annex/, "");
+
+      return identifier.length >= 2 && inconsistencyText.includes(identifier);
+    });
 }
 
 export function scrutinizePil({ extraction, documents, hasMainPetition }) {
@@ -84,7 +97,7 @@ export function scrutinizePil({ extraction, documents, hasMainPetition }) {
       result(
         "annexures",
         "Referenced annexures",
-        "defect",
+        "warning",
         `Referenced annexure${missingAnnexures.length === 1 ? "" : "s"} not matched to the uploads: ${missingAnnexures.join(", ")}.`,
         "Uploaded filenames and document text",
       ),
@@ -93,8 +106,12 @@ export function scrutinizePil({ extraction, documents, hasMainPetition }) {
     checks.push(result("annexures", "Referenced annexures", "pass", "Detected annexure references could be matched to the uploaded material.", "Uploaded filenames and document text"));
   }
 
-  if (extraction.inconsistencies.length) {
-    extraction.inconsistencies.forEach((inconsistency, index) => {
+  const inconsistencies = extraction.inconsistencies.filter(
+    (inconsistency) => !describesMissingAnnexure(inconsistency, missingAnnexures),
+  );
+
+  if (inconsistencies.length) {
+    inconsistencies.forEach((inconsistency, index) => {
       checks.push(
         result(
           `inconsistency-${index + 1}`,

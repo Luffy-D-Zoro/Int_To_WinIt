@@ -41,7 +41,7 @@ test("marks a procedurally complete prototype filing ready for registry review",
   assert.ok(scrutiny.checks.every((check) => check.status === "pass"));
 });
 
-test("marks missing core fields and unmatched annexures as defects", () => {
+test("marks missing core fields as defects and unmatched annexures as warnings", () => {
   const scrutiny = scrutinizePil({
     extraction: {
       ...completeExtraction,
@@ -56,6 +56,31 @@ test("marks missing core fields and unmatched annexures as defects", () => {
   });
 
   assert.equal(scrutiny.overallStatus, "needs_correction");
-  assert.ok(scrutiny.counts.defect >= 5);
-  assert.equal(scrutiny.checks.find((check) => check.id === "annexures").status, "defect");
+  assert.ok(scrutiny.counts.defect >= 4);
+  assert.equal(scrutiny.checks.find((check) => check.id === "annexures").status, "warning");
+});
+
+test("keeps a filing ready and reports one warning when a referenced annexure is missing", () => {
+  const scrutiny = scrutinizePil({
+    extraction: {
+      ...completeExtraction,
+      annexuresReferenced: ["Annexure P-7"],
+      inconsistencies: [
+        {
+          type: "Missing Annexure",
+          description: "Annexure P-7 is referenced but was not found in the uploaded documents.",
+          source: "main-petition.pdf",
+        },
+      ],
+    },
+    documents,
+    hasMainPetition: true,
+  });
+
+  const warnings = scrutiny.checks.filter((check) => check.status === "warning");
+
+  assert.equal(scrutiny.overallStatus, "ready_for_registry_review");
+  assert.equal(scrutiny.counts.defect, 0);
+  assert.equal(warnings.length, 1);
+  assert.equal(warnings[0].id, "annexures");
 });
